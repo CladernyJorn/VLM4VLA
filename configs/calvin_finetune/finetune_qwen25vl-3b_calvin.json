@@ -14,7 +14,7 @@
     "cap_loss_ratio": 0.05,
     "fwd_loss_ratio": 0,
     "seed": 123,
-    "batch_size": 16,
+    "batch_size": 8,
     "num_workers": 4,
     "data_scale": 1,
     "optimizer": "adam",
@@ -107,7 +107,7 @@
         "val_check_interval": null,
         "check_val_every_n_epoch": 1,
         "max_steps": -1,
-        "accumulate_grad_batches": 1
+        "accumulate_grad_batches": 2
     },
     "train_dataset": {
         "type": "DiskCalvinDataset",

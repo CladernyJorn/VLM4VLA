@@ -57,6 +57,8 @@ class ActionPredictionBatchTransform:
         """
         make the open gripper action state as value (0 or 1)
         """
+        # 确保action最后一维大小为7
+        assert action.shape[-1] == 7, "The action dimension must be 7 if refine action at gripper dim"
         if isinstance(action, np.ndarray):
             action = action.copy()
         elif isinstance(action, torch.Tensor):
@@ -116,7 +118,8 @@ class ActionPredictionBatchTransform:
             action = regularize_action(action, self.x_mean, self.x_std)
         if self.use_mu_law:
             action = mu_law_companding(action)
-        action = self.refine_action_at_gripper_dim(action, value=0)
+        if action.shape[-1] == 7:
+            action = self.refine_action_at_gripper_dim(action, value=0)
         action = torch.tensor(action)
         if self.mode != "train":
             return action, action_mask, None, None
@@ -135,8 +138,9 @@ class ActionPredictionBatchTransform:
             assert action.shape[0] == self.window_size + self.fwd_pred_next_n - 1
 
         action_mask = action_mask.bool()
-        action = self.refine_action_at_gripper_dim(action, value=self.min_action, status=False)
-        action = self.refine_action_at_gripper_dim(action, value=self.max_action, status=True)
+        if action.shape[-1] == 7:
+            action = self.refine_action_at_gripper_dim(action, value=self.min_action, status=False)
+            action = self.refine_action_at_gripper_dim(action, value=self.max_action, status=True)
         action = action.flatten()
         all_input_ids = task_description
         return all_input_ids, None, None

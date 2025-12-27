@@ -76,7 +76,7 @@ class RoboQwen25VL(BaseRoboVLM):
         lang_x: torch.Tensor,
         attention_mask: torch.Tensor = None,
         position_ids: torch.LongTensor = None,  # not used (not transfered from forward_action)
-        action_labels: Tuple[torch.Tensor, torch.Tensor] = None,
+        action_labels: Tuple[torch.Tensor, Optional[torch.Tensor]] = None,
         action_mask: torch.Tensor = None,
         vision_gripper=None,
         raw_text=None,
@@ -141,7 +141,7 @@ class RoboQwen25VL(BaseRoboVLM):
             pass
 
         if rel_state is not None and self.use_state:
-            print("Using state!!!!!!!!!!!!")
+            print("Using state!")
             # insert_idx = multimodal_embeds.shape[1] - int(self.tokenizer.eos_token is not None)  # insert at last
             state_token = self.encode_state(rel_state)  # bs, seq_len, d
             state_token = state_token.reshape(bs * seq_len, state_token.shape[-1]).unsqueeze(1)  # bs*seq_len, 1, d

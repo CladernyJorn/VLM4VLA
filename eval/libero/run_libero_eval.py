@@ -73,44 +73,59 @@ if __name__ == "__main__":
     assert config_path != None
     configs = load_config(config_path)
 
-    # change all path in configs to new path
-    new_dir = "/home/disk1/jianke_z"
-    old_dir = "/mnt/zjk/jianke_z"
-    keys_to_change = [
-        "model_path", "model_config", ["tokenizer", "pretrained_model_name_or_path"],
-        ["vlm", "pretrained_model_name_or_path"]
-        # ["train_dataset", "data_dir"], ["val_dataset", "data_dir"]
-    ]
+    # change all path in configs to new path (for testing on another machine)
+    # new_dir = "/home/admin/workspace/jianke/jianke_z"
+    # old_dir = "/mnt/zjk/jianke_z"
+    # keys_to_change = [
+    #     "model_path", "model_config", ["tokenizer", "pretrained_model_name_or_path"],
+    #     ["vlm", "pretrained_model_name_or_path"]
+    #     # ["train_dataset", "data_dir"], ["val_dataset", "data_dir"]
+    # ]
 
-    def check_qwen_dir(path):
-        if not os.path.exists(path):
-            if "Qwen2.5" in path:
-                has_configjson = "config.json" in path
-                if "3b" in path or "3B" in path:
-                    new_path = "/home/disk1/jianke_z/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/c747f21f03e7d0792c30766310bd7d8de17eeeb3"
-                elif "7b" in path or "7B" in path:
-                    new_path = "/home/disk1/jianke_z/huggingface/hub/models--Qwen--Qwen2.5-VL-7B-Instruct/snapshots/cc594898137f460bfe9f0759e9844b3ce807cfb5"
-                else:
-                    raise ValueError(f"Unknown Qwen2.5 model size in {configs[key[0]][key[1]]}")
-                if has_configjson:
-                    new_path += "/config.json"
-                return new_path
-        else:
-            return path
+    # def check_qwen_dir(path):
+    #     if not os.path.exists(path):
+    #         if "Qwen2.5" in path or "qwen25" in path or "Qwen-2.5" in path or "qwen-2.5" in path:
+    #             has_configjson = "config.json" in path
+    #             if "3b" in path or "3B" in path:
+    #                 new_path = "/home/admin/workspace/jianke/jianke_z/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/c747f21f03e7d0792c30766310bd7d8de17eeeb3"
+    #             elif "7b" in path or "7B" in path:
+    #                 new_path = "/home/admin/workspace/jianke/jianke_z/huggingface/hub/models--Qwen--Qwen2.5-VL-7B-Instruct/snapshots/cc594898137f460bfe9f0759e9844b3ce807cfb5"
+    #             else:
+    #                 raise ValueError(f"Unknown Qwen2.5 model size in {configs[key[0]][key[1]]}")
+    #             if has_configjson:
+    #                 new_path += "/config.json"
+    #             return new_path
 
-    for key in keys_to_change:
-        if isinstance(key, list):
-            configs[key[0]][key[1]] = configs[key[0]][key[1]].replace(old_dir, new_dir)
-            if "dataset" in key[0]:
-                configs[key[0]][key[1]] = configs[key[0]][key[1]].replace("data/robotics_0707/", "")
-            configs[key[0]][key[1]] = check_qwen_dir(configs[key[0]][key[1]])
-        else:
-            configs[key] = configs[key].replace(old_dir, new_dir)
-            configs[key] = check_qwen_dir(configs[key])
+    #         elif "qwen3" in path:
+    #             has_configjson = "config.json" in path
+    #             if "4b" in path or "4B" in path:
+    #                 new_path = "/home/admin/workspace/jianke/jianke_z/VLMA-baselines/1/qwen3vl-4b"
+    #             elif "8b" in path or "8B" in path:
+    #                 new_path = "/home/admin/workspace/jianke/jianke_z/VLMA-baselines/1/qwen3vl-8b"
+    #             elif "2b" in path or "2B" in path:
+    #                 new_path = "/home/admin/workspace/jianke_z/VLMA-baselines/1/qwen3vl-2b-instruct"
+    #             else:
+    #                 raise ValueError(f"Unknown Qwen3 model size in {configs[key[0]][key[1]]}")
+    #             if has_configjson:
+    #                 new_path += "/config.json"
+    #             return new_path
+    #     else:
+    #         return path
 
-    if "pi0_cfg" in configs.keys():
-        print("Changing pi0_cfg path")
-        configs["pi0_cfg"] = configs["pi0_cfg"].replace(old_dir + "/vlm4vla", new_dir + "/VLM4VLA")
+
+    # for key in keys_to_change:
+    #     if isinstance(key, list):
+    #         configs[key[0]][key[1]] = configs[key[0]][key[1]].replace(old_dir, new_dir)
+    #         if "dataset" in key[0]:
+    #             configs[key[0]][key[1]] = configs[key[0]][key[1]].replace("data/robotics_0707/", "home/admin/workspace/jianke/jianke_z/data/robotics_0707")
+    #         configs[key[0]][key[1]] = check_qwen_dir(configs[key[0]][key[1]])
+    #     else:
+    #         configs[key] = configs[key].replace(old_dir, new_dir)
+    #         configs[key] = check_qwen_dir(configs[key])
+
+    # if "pi0_cfg" in configs.keys():
+    #     print("Changing pi0_cfg path")
+    #     configs["pi0_cfg"] = configs["pi0_cfg"].replace(old_dir + "/vlm4vla", new_dir + "/VLM4VLA")
 
     args.model_name = configs["config"].split("/")[-1].split(".")[0]
     args.model_name += f'_{configs["exp_name"]}'
@@ -148,7 +163,7 @@ if __name__ == "__main__":
     if os.path.isdir(ckpt_path):
         target_ckpt_path = ckpt_path.replace(".ckpt", ".pt")
         from vlm4vla.utils.zero_to_fp32 import (
-            convert_zero_checkpoint_to_fp32_state_dict,)
+            convert_zero_checkpoint_to_fp32_state_dict, )
 
         print(f"converting {ckpt_path} to {target_ckpt_path}")
         convert_zero_checkpoint_to_fp32_state_dict(ckpt_path, target_ckpt_path)

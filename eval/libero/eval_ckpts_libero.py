@@ -1,7 +1,10 @@
 import os
 
 base_paths = [
-    "/home/disk1//VLM4VLA/runs/torch_checkpoints_fp32/qwen3vl/libero10_finetune/2025-09-10/libero10_VLMA-baselines_1_qwen3vl-4b-bs512-lr2e-05-ws1-FCDecoder-latent1"
+    # "/mnt/workspace/jianke/jianke_z/s/runs/torch_checkpoints_fp32/qwen3vl/libero10_finetune/2025-09-10/libero10_VLMA-baselines_1_qwen3vl-4b-bs512-lr2e-05-ws1-FCDecoder-latent1-patch14",
+    # "/mnt/workspace/jianke/jianke_z/s/runs/torch_checkpoints_fp32/qwen3vl/libero10_finetune/2025-10-14/libero10_VLMA-baselines_1_qwen3vl-8b-bs512-lr2e-05-ws1-FCDecoder-latent1-patch16"
+    # "/mnt/workspace/jianke/jianke_z/s/runs/torch_checkpoints_fp32/qwen3vl/libero10_finetune/2025-10-24/libero10_VLMA-baselines_1_qwen3vl-2b-instruct-bs512-lr2e-05-ws1-FCDecoder-latent1" 
+    "/mnt/workspace/jianke/jianke_z/s/runs/torch_checkpoints_fp32/qwen3vl/calvin_finetune/2025-11-27/calvin_codebase_qwen-vla_Qwen_Qwen3-VL-30B-A3B-Instruct-bs1024-lr4e-05-ws1-FCDecoder-latent1-strategydeepspeed_stage_2"   
 ]
 ckpt_paths = []
 for base_path in base_paths:

@@ -87,7 +87,7 @@ class RoboInternVL35(BaseRoboVLM):
         lang_x: torch.Tensor,
         attention_mask: torch.Tensor = None,
         position_ids: torch.LongTensor = None,  # not used (not transfered from forward_action)
-        action_labels: Tuple[torch.Tensor, torch.Tensor] = None,
+        action_labels: Tuple[torch.Tensor, Optional[torch.Tensor]] = None,
         action_mask: torch.Tensor = None,
         vision_gripper=None,
         raw_text=None,

@@ -46,11 +46,17 @@ class RoboQwen3VL(BaseRoboVLM):
     @property
     def text_tower(self):
         # not used
-        return self.model.model
+        try:
+            return self.model.language_model
+        except:
+            return self.model.model.language_model
 
     @property
     def vision_tower(self):
-        return self.model.visual
+        try:
+            return self.model.visual
+        except:
+            return self.model.model.visual
 
     @property
     def model(self):
@@ -87,7 +93,7 @@ class RoboQwen3VL(BaseRoboVLM):
         lang_x: torch.Tensor,
         attention_mask: torch.Tensor = None,
         position_ids: torch.LongTensor = None,  # not used (not transfered from forward_action)
-        action_labels: Tuple[torch.Tensor, torch.Tensor] = None,
+        action_labels: Tuple[torch.Tensor, Optional[torch.Tensor]] = None,
         action_mask: torch.Tensor = None,
         vision_gripper=None,
         raw_text=None,
@@ -131,6 +137,7 @@ class RoboQwen3VL(BaseRoboVLM):
 
         image_embeds = image_embeds.to(input_embeds.device, input_embeds.dtype)
         input_embeds = input_embeds.masked_scatter(image_mask, image_embeds)
+
         visual_pos_masks = mask
         deepstack_visual_embeds_multiscale = image_embeds_multiscale
         # print("deepstack_visual_embeds_multiscale", len(deepstack_visual_embeds_multiscale),
@@ -244,7 +251,7 @@ class RoboQwen3VL(BaseRoboVLM):
                 except Exception:
                     pass
 
-        output = self.model.model(
+        output = self.model.model.language_model(
             input_ids=None,
             attention_mask=multimodal_attention_mask,
             position_ids=position_ids,

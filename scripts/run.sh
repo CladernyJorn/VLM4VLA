@@ -15,7 +15,7 @@ export NCCL_IB_GID_INDEX=3
 export NCCL_SOCKET_IFNAME=eth0
 
 # setup distributed training args
-GPUS_PER_NODE=8
+GPUS_PER_NODE=4
 WORKER_NUM=1 # number of distributed workers
 
 NODE_ID=0
@@ -65,4 +65,3 @@ torchrun \
 # bash scripts/run.sh configs/oxe_training/finetune_qwen25vl-3b_bridge.json
 
 # bash scripts/run.sh configs/oxe_training/finetune_pi0_paligemma-3b_bridge.json # pi0
-# bash scripts/run.sh configs/realdualarm_training/finetune_qwen3vl-4b_x2w_0928.json

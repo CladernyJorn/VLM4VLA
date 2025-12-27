@@ -59,6 +59,7 @@ class CustomModel:
 
             new_state_dict = self.convert_old_state_dict(new_state_dict)
             # print(self.model.model.model.dtype) # bf16
+            print(f"CKPT Loading from {ckpt_path}")
             msg = self.model.load_state_dict(new_state_dict, strict=False)
             # print(self.model.model.model.dtype) # bf16
             print(f"CKPT Loaded from {ckpt_path}\n {msg}")
@@ -98,7 +99,8 @@ class CustomModel:
         self.policy = self.model
         self.policy = self.policy.to(self.dtype)
         # self.policy = self.policy.float()
-        self.policy.to(self.device)
+        if self.device:
+            self.policy.to(self.device)
         self.policy.eval()
 
         if not hasattr(self.policy.model, "lm_head") and hasattr(self.policy.model, "act_head"):
@@ -134,8 +136,13 @@ class CustomModel:
         else:
             qwen25_seq_id = None
 
-        self.text_preprocess = get_text_function(self.model.model.tokenizer, configs["model"], qwen25_seq_id)
-
+        if 'prompt' in configs:
+            robot_prompt = configs["prompt"]
+        else:
+            robot_prompt = None
+        print('robot_prompt', robot_prompt)
+        self.text_preprocess = get_text_function(self.model.model.tokenizer, configs["model"], qwen25_seq_id, robot_prompt)
+        
         self.action_space = self.configs["act_head"].get("action_space", "continuous")
 
         print(f"Evaluating checkpoint {ckpt_path}")
@@ -275,7 +282,7 @@ class CustomModel:
             mask,
         )
 
-    def step(self, obs, goal, execute_step=1):
+    def step(self, obs, goal, execute_step):
         # execute_step: number of steps to execute the same action chunk
         # if execute_step==1, equals execute_chunk= False, mostly slow
         # if execute_step>10, equals execute_chunk= True, mostly fast

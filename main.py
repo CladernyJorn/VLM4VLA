@@ -2,9 +2,7 @@ import os
 
 os.environ['HF_ENDPOINT'] = "https://hf-mirror.com"
 os.environ['HF_HOME'] = '/mnt/zjk/jianke_z/huggingface'
-os.environ['WANDB_BASE_URL'] = 'https://api.bandw.top'
-# paligemma key: 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
-# hf-mirror-cli google/paligemma2-3b-pt-224 --token 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 --username CladernyJorn
+
 import argparse
 import json
 from pathlib import Path
@@ -12,15 +10,17 @@ import importlib
 import copy
 import functools
 from re import L
-from typing import Dict, Any
+from typing import Dict, Any, Set, Type
 import datetime
 
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning.pytorch.trainer import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger, CSVLogger, WandbLogger
 from lightning.pytorch.strategies import DDPStrategy
+from lightning.pytorch.strategies import FSDPStrategy
 from lightning import seed_everything
 import torch.distributed as dist
+import torch.nn as nn
 
 from vlm4vla.train.base_trainer import BaseTrainer
 from vlm4vla.data.datamodule.gr_datamodule import GRDataModule
@@ -72,8 +72,12 @@ def init_trainer_config(configs):
     # print(exp_name)
     # exp_name = eval(exp_name)
 
+    strategy_name = "None"
     if "strategy" not in trainer_config or trainer_config["strategy"] == "ddp":
+        strategy_name = "ddp"
         trainer_config["strategy"] = DDPStrategy(find_unused_parameters=True)
+    else:
+       strategy_name =  trainer_config.get("strategy", "none")
 
     if "Qwen" not in configs['model_url']:
         assert configs['model_url'].split('/')[-1] in configs['vlm']['pretrained_model_name_or_path']
@@ -100,6 +104,10 @@ def init_trainer_config(configs):
         exp_name = "b1k" + exp_name
     else:
         raise NotImplementedError
+    
+    # Add prompt field to exp_name if present
+    if configs.get("prompt") is not None:
+        exp_name += f"_{configs['prompt']}"
     # init loggers
     loggers = None
     log_dir = Path(os.path.join(get_date_str(), exp_name))
@@ -147,8 +155,10 @@ def experiment(variant):
     trainer_config = init_trainer_config(variant)
     model_load_path = variant.get("model_load_path", None)
 
-    trainer = Trainer(**trainer_config)
-    variant["gpus"] = trainer.num_devices
+    if trainer_config["strategy"] != "fsdp":
+        trainer = Trainer(**trainer_config)
+        variant["gpus"] = trainer.num_devices
+    
     variant["train_setup"]["precision"] = variant["trainer"]["precision"]
 
     if variant["fwd_head"] is not None:
@@ -173,6 +183,61 @@ def experiment(variant):
         importlib.reload(transformers)
 
     model = BaseTrainer.from_checkpoint(model_load_path, variant.get("model_load_source", "torch"), variant)
+    
+    if trainer_config["strategy"] == "fsdp":
+        fsdp_wrap_policy = get_wrap_policy_from_model(model.model.backbone)
+        trainer_config["strategy"] = FSDPStrategy(
+            sharding_strategy="FULL_SHARD",  # 对应 fsdp_sharding_strategy: FULL_SHARD
+            # cpu_offload=True,                # 对应 fsdp_offload_params: true
+            auto_wrap_policy=fsdp_wrap_policy,  # 自动包装策略
+            limit_all_gathers=True,          # 推荐开启以提升通信效率（可选）
+            use_orig_params=True,            # 对应 fsdp_use_orig_params: true
+            forward_prefetch=True,          # 对应 fsdp_forward_prefetch: false
+            backward_prefetch=True,          # 对应 fsdp_backward_prefetch: BACKWARD_PRE（True ≈ BACKWARD_PRE）
+            sync_module_states=True,         # 对应 fsdp_sync_module_states: true
+        )
+        trainer = Trainer(**trainer_config)
+
+    if trainer.precision == "bf16" or trainer.precision == "bf16-mixed":
+        import torch
+        model = model.to(torch.bfloat16)
+    elif trainer.precision == 32:
+        import torch
+        model = model.to(torch.float32)
+    elif trainer.precision == 16 or trainer.precision == "16-mixed":
+        import torch
+        model = model.to(torch.float16)
+    
+    if trainer_config["strategy"] != "fsdp":
+        # Print trainable and frozen parameters
+        # Note: model is BaseTrainer (LightningModule), need to access model.model for actual model parameters
+        trainable_params = []
+        frozen_params = []
+        trainable_param_count = 0
+        frozen_param_count = 0
+        
+        for name, param in model.model.named_parameters():
+            if param.requires_grad:
+                trainable_params.append(name)
+                trainable_param_count += param.numel()
+            else:
+                frozen_params.append(name)
+                frozen_param_count += param.numel()
+        
+        # Only print on rank 0 to avoid duplicate output in distributed training
+        if dist.get_rank() == 0:
+            print("=" * 80)
+            print(f"训练参数数量: {len(trainable_params)} (总计: {trainable_param_count / 1000000:.2f}M)")
+            print(f"冻结参数数量: {len(frozen_params)} (总计: {frozen_param_count / 1000000:.2f}M)")
+            print("=" * 80)
+            print("\n【训练参数列表】:")
+            for i, name in enumerate(trainable_params, 1):
+                print(f"  {i}. {name}")
+            print("\n" + "=" * 80)
+            print("\n【冻结参数列表】:")
+            for i, name in enumerate(frozen_params, 1):
+                print(f"  {i}. {name}")
+            print("=" * 80 + "\n")
 
     image_preprocess = model.model.image_processor
 
@@ -199,16 +264,14 @@ def experiment(variant):
                     image_processor=image_preprocess,
                     model_type=variant["model"],
                 ), model.model),
-                discrete=(False if variant["act_head"] is None else variant["act_head"].get(
-                    "action_space", "continuous") == "discrete"),
-                discrete_action=(False if variant["act_head"] is None else variant["act_head"].get(
-                    "action_space", "continuous") == "discrete"),
-                use_mu_law=variant.get("use_mu_law", False),
-                mu_val=variant.get("mu_val", 255),
+                discrete=False,
+                discrete_action=False,
+                use_mu_law=False,
+                mu_val=255,
                 n_bin=(256 if variant["act_head"] is None else variant["act_head"].get("n_bin", 256)),
                 min_action=(-1 if variant["act_head"] is None else variant["act_head"].get("min_action", -1)),
                 max_action=(1 if variant["act_head"] is None else variant["act_head"].get("max_action", 1)),
-                discrete_action_history=variant.get("discrete_action_history", False),
+                discrete_action_history=False,
                 act_step=variant.get("fwd_pred_next_n", 1),
                 norm_action=variant.get("norm_action", False),
                 norm_min=variant.get("norm_min", -1),
@@ -217,7 +280,7 @@ def experiment(variant):
                 x_mean=variant.get("x_mean", 0),
                 x_std=variant.get("x_std", 1),
                 weights=variant.get("train_weights", None),
-                tcp_rel=variant.get("tcp_rel", False),
+                tcp_rel=False,
                 # vit_name=vit_name,
                 model_name=variant.get("model", "flamingo"),
             ),
@@ -355,4 +418,5 @@ if __name__ == "__main__":
     dist.init_process_group(backend="nccl")
     experiment(variant=configs)
 
+# bash scripts/run.sh configs/calvin_finetune/finetune_paligemma2-3b_calvin.json
 # bash scripts/run.sh configs/calvin_finetune/finetune_paligemma2-3b_calvin.json

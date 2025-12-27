@@ -96,7 +96,8 @@ class FMDecoder(BasePolicyHead):
 
     def sample_time(self, batch_size: int, device, dtype):
         sample = self.beta_dist.sample([batch_size]).to(device=device, dtype=dtype)
-        return (self.noise_s - sample) / self.noise_s
+        # return (self.noise_s - sample) / self.noise_s
+        return self.noise_s*(1-sample)
 
     def _ensure_vl_list(self, vl_embs_list: List[torch.Tensor], expected_len: int):
         assert isinstance(vl_embs_list, list) and len(vl_embs_list) >= expected_len, (
@@ -259,7 +260,7 @@ class FMDecoder(BasePolicyHead):
             loss = ((pred_bt - target_bt)**2)[mask].mean()
         else:
             loss = ((pred_bt - target_bt)**2).mean()
-        return {"loss_arm": loss, "loss_gripper": torch.tensor(-1.0, device=pred_action.device), "acc_gripper": -1.0}
+        return {"loss_arm": loss, "loss_gripper": torch.tensor(0.0, device=pred_action.device), "acc_gripper": -1.0}
 
     @torch.no_grad()
     def predict(self, vl_embs_list: List[torch.Tensor], state: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -307,7 +308,7 @@ class FMDecoder(BasePolicyHead):
             pred = self.action_decoder(model_output)
             pred_velocity = pred[:, -self.fwd_pred_next_n:]
             actions = actions + dt * pred_velocity
-        return actions
+        return actions[...,:6],actions[...,-1]  # Return (arm, gripper)
 
 
 if __name__ == "__main__":

@@ -55,17 +55,6 @@ torchrun \
     --gpus $GPUS_PER_NODE \
     --num_nodes $WORKER_NUM
 
-# bash scripts/run.sh configs/calvin_finetune/finetune_paligemma-3b_calvin.json
-# bash scripts/run.sh configs/calvin_finetune/finetune_qwen25vl-3b_calvin.json
-# bash scripts/run.sh configs/calvin_finetune/finetune_kosmos_calvin.json
-# bash scripts/run.sh configs/calvin_finetune/finetune_qwen25vl-robobrain2_calvin.json
-# bash scripts/run.sh configs/calvin_finetune/finetune_internvl35-4b_calvin.json
-# bash scripts/run.sh configs/oxe_training/finetune_internvl35-4b_bridge.json
-# bash scripts/run.sh configs/oxe_training/finetune_internvl35-4b_libero10.json
+
 # bash scripts/run_debug.sh configs/calvin_finetune/finetune_qwen3vl-4b_calvin.json
 
-# bash scripts/run.sh configs/oxe_training/finetune_kosmos_bridge.json # vla
-# bash scripts/run.sh configs/oxe_training/finetune_paligemma-3b_bridge.json # sft
-# bash scripts/run.sh configs/oxe_training/finetune_qwen25vl-3b_bridge.json
-
-# bash scripts/run.sh configs/oxe_training/finetune_pi0_paligemma-3b_bridge.json # pi0

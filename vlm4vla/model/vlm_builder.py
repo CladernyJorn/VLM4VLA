@@ -25,6 +25,7 @@ def build_vlm(vlm_config, tokenizer_config, precision="bf16"):
 
         from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import Qwen2_5_VLForConditionalGeneration
         from transformers.models.auto.processing_auto import AutoProcessor
+        from transformers import AutoConfig
         # from transformers import Qwen2VLImageProcessor
         model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_path,
@@ -32,6 +33,14 @@ def build_vlm(vlm_config, tokenizer_config, precision="bf16"):
             attn_implementation="flash_attention_2",
             torch_dtype=torch.bfloat16,
         )
+
+        # print("!"*20+" Training From Scratch "+"!"*20)
+        # config=AutoConfig.from_pretrained(model_path)
+        # config.attn_implementation="flash_attention_2"
+        # config.torch_dtype=torch.bfloat16
+        # model=Qwen2_5_VLForConditionalGeneration(config)
+
+
         tokenizer = AutoProcessor.from_pretrained(model_path, min_pixels=28 * 28 * 256, max_pixels=1280 * 28 * 28)
     elif model_name == "qwen3vl":
         from transformers.models.auto.processing_auto import AutoProcessor
@@ -55,16 +64,24 @@ def build_vlm(vlm_config, tokenizer_config, precision="bf16"):
         tokenizer = AutoProcessor.from_pretrained(model_path, min_pixels=28 * 28 * 256, max_pixels=1280 * 28 * 28)
     elif model_name == "qwen3vlmoe":
 
-        from transformers.models.qwen3_vl_moe.modeling_qwen3_vl_moe import Qwen3_VL_MOEForConditionalGeneration
         from transformers.models.auto.processing_auto import AutoProcessor
         # from transformers import Qwen2VLImageProcessor
-
-        model = Qwen3_VL_MOEForConditionalGeneration.from_pretrained(
-            model_path,
-            device_map="cpu",
-            attn_implementation="flash_attention_2",
-            torch_dtype=torch.bfloat16,
-        )
+        try:
+            from transformers.models.qwen3_vl_moe.modeling_qwen3_vl_moe import Qwen3_VL_MOEForConditionalGeneration
+            model = Qwen3_VL_MOEForConditionalGeneration.from_pretrained(
+                model_path,
+                device_map="cpu",
+                attn_implementation="flash_attention_2",
+                torch_dtype=torch.bfloat16,
+            )
+        except:
+            from transformers.models.qwen3_vl_moe.modeling_qwen3_vl_moe import Qwen3VLMoeForConditionalGeneration
+            model = Qwen3VLMoeForConditionalGeneration.from_pretrained(
+                model_path,
+                device_map="cpu",
+                attn_implementation="flash_attention_2",
+                torch_dtype=torch.bfloat16,
+            )
         tokenizer = AutoProcessor.from_pretrained(model_path, min_pixels=28 * 28 * 256, max_pixels=1280 * 28 * 28)
     elif model_name == "kosmos":
         # from transformers.models.auto.modeling_auto import AutoModelForVision2Seq
@@ -79,11 +96,6 @@ def build_vlm(vlm_config, tokenizer_config, precision="bf16"):
         #     padding_side="right",
         #     use_fast=False,
         # )
-    elif model_name == "florence":
-        from transformers import AutoModelForCausalLM, AutoProcessor
-        model = AutoModelForCausalLM.from_pretrained(
-            model_path, device_map="cpu", torch_dtype=torch.bfloat16, trust_remote_code=True)
-        tokenizer = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
     elif model_name == "internvl35":
         # from transformers.models.internvl35.modeling_internvl35 import InternVL35ForConditionalGeneration
         from transformers import AutoTokenizer, AutoModel

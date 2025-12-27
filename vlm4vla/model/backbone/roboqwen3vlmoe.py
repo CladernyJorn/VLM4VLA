@@ -30,20 +30,32 @@ class RoboQwen3VLMOE(BaseRoboVLM):
 
     @property
     def hidden_size(self):
-        return self.model.config.hidden_size
+        if hasattr(self.model.config, "hidden_size"):
+            return self.model.config.hidden_size
+        elif hasattr(self.model.config, "text_config"):
+            return self.model.config.text_config.hidden_size
 
     @property
     def word_embedding(self):
-        return self.model.model.embed_tokens  # weight
+        try:
+            return self.model.get_input_embeddings()  # Qwen3VLForConditionalGeneration
+        except:
+            return self.model.model.embed_tokens  # weight
 
     @property
     def text_tower(self):
         # not used
-        return self.model.model
+        try:
+            return self.model.language_model
+        except:
+            return self.model.model.language_model
 
     @property
     def vision_tower(self):
-        return self.model.visual
+        try:
+            return self.model.visual
+        except:
+            return self.model.model.visual
 
     @property
     def model(self):
@@ -79,7 +91,7 @@ class RoboQwen3VLMOE(BaseRoboVLM):
         lang_x: torch.Tensor,
         attention_mask: torch.Tensor = None,
         position_ids: torch.LongTensor = None,  # not used (not transfered from forward_action)
-        action_labels: Tuple[torch.Tensor, torch.Tensor] = None,
+        action_labels: Tuple[torch.Tensor, Optional[torch.Tensor]] = None,
         action_mask: torch.Tensor = None,
         vision_gripper=None,
         raw_text=None,
@@ -109,7 +121,7 @@ class RoboQwen3VLMOE(BaseRoboVLM):
 
         input_embeds = self.word_embedding(input_ids)  # (4*8, 12, 1024)
 
-        image_embeds = self.vision_tower(pixel_values, grid_thw=image_grid_thw)
+        image_embeds, image_embeds_multiscale = self.vision_tower(pixel_values, grid_thw=image_grid_thw)
         n_image_tokens = (input_ids == self.model.config.image_token_id).sum().item()
         n_image_features = image_embeds.shape[0]
         if n_image_tokens != n_image_features:

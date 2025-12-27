@@ -16,6 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies=[
+    "torch==2.6.0",
     "torchvision>=0.10.0",
     "pytorch-lightning>=1.8.6",
     "PyYAML>=6.0",

@@ -413,11 +413,14 @@ class BaseTrainer(pl.LightningModule):
         gripper_action = None
 
         if action is not None:
-            arm_action = action[:, :, :6]  # b,len,act_dim-1
-            gripper_action = action[:, :, 6]  # b,len
-            gripper_action = (gripper_action + 1.0) / 2
-            gripper_action = gripper_action.long()
-
+            if action.shape[-1] == 7:
+                arm_action = action[:, :, :6]  # b,len,act_dim-1
+                gripper_action = action[:, :, 6]  # b,len
+                gripper_action = (gripper_action + 1.0) / 2
+                gripper_action = gripper_action.long()
+            else:
+                arm_action = action
+                gripper_action = None
         fwd_rgb_chunck = batch.get("fwd_rgb_chunck", None)
         fwd_hand_rgb_chunck = batch.get("fwd_hand_rgb_chunck", None)
         if fwd_rgb_chunck is not None:
@@ -430,8 +433,13 @@ class BaseTrainer(pl.LightningModule):
         action_chunck = batch.get("action_chunck", None)
         if action_chunck is not None:
             action_chunck = action_chunck.cuda()
-            arm_action_chunck = action_chunck[..., :6]
-            gripper_action_chunck = action_chunck[..., -1]
+            if action_chunck.shape[-1] == 7:
+                arm_action_chunck = action_chunck[..., :6]
+                gripper_action_chunck = action_chunck[..., -1]
+            else:
+                arm_action_chunck = action_chunck
+                gripper_action_chunck = None
+
 
         if isinstance(rgb, torch.Tensor):
             rgb = rgb[:, :seq_len]
@@ -661,6 +669,7 @@ class BaseTrainer(pl.LightningModule):
             output,
             phase="train",
             prog_bar_set=prog_bar_set,
+            sync_dist=True,
             on_step=True,
             on_epoch=False,
         )
@@ -714,6 +723,54 @@ class BaseTrainer(pl.LightningModule):
             )
 
             return prediction
+
+    def on_fit_start(self):
+        import torch
+        import torch.distributed as dist
+        from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+
+        model = self.model
+        is_fsdp = True
+        self._main_rank_print("Only useful when using FSDP; Only useful when using FSDP!")
+
+        # 1. 当前 rank 的 trainable 参数量（FSDP 下是分片，DDP 下是完整模型）
+        local_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+        # 2. 尝试估算全局参数总量（仅在 FSDP + FULL_SHARD 下准确）
+        global_trainable = None
+        if is_fsdp and dist.is_initialized():
+            try:
+                local_tensor = torch.tensor([local_trainable], dtype=torch.float64, device=self.device)
+                global_tensor = local_tensor.clone()
+                dist.all_reduce(global_tensor, op=dist.ReduceOp.SUM)
+                global_trainable = global_tensor.item()
+            except Exception as e:
+                self._main_rank_print(f"[Warning] Failed to compute global param count: {e}")
+                global_trainable = None
+
+        # 3. 打印本 rank 的分片大小
+        rank_info = f"[Rank {self.global_rank}] Local trainable params: {local_trainable / 1e6:.2f}M"
+        print(rank_info)
+
+        # 4. 主 rank 打印汇总信息
+        if self.trainer.is_global_zero:
+            if is_fsdp:
+                est_global_str = f" (estimated global: {global_trainable / 1e6:.2f}M)" if global_trainable else ""
+                self._main_rank_print(f"FSDP active. Local shard per rank: ~{local_trainable / 1e6:.2f}M{est_global_str}")
+            elif is_ddp:
+                self._main_rank_print(f"DDP active. Full model replicated: {local_trainable / 1e6:.2f}M per GPU")
+            else:
+                self._main_rank_print(f"Single-GPU mode: {local_trainable / 1e6:.2f}M")
+
+        # 5. （可选）打印显存辅助判断
+        if torch.cuda.is_available():
+            alloc_gb = torch.cuda.memory_allocated() / 1e9
+            print(f"[Rank {self.global_rank}] GPU Memory Allocated: {alloc_gb:.2f} GB")
+
+    # def on_train_start(self):
+    #     print(type(self.trainer.model))  # 如果是 FSDP，会显示 <class 'torch.distributed.fsdp...'>
+    #     print(self.trainer.model)
+    #     import pdb; pdb.set_trace()    
 
     @staticmethod
     def convert_old_state_dict(state_dict):
