@@ -2,7 +2,7 @@
 <h2><center>VLM4VLA: Revisiting Vison-Language-Models in Vision-Language-Action Models</h2>
 </div>
 <p align="center">
-</sup>Jianke Zhang<sup>1</sup>, </sup>Xiaoyu Chen<sup>1</sup>, </sup>Qiuyue Wang<sup>2</sup>, </sup>Mingsheng Li<sup>2</sup>, </sup>Yanjiang Guo<sup>1</sup>, </sup>Yucheng Hu<sup>1</sup>, </sup>Jiajun Zhang<sup>2</sup>, </sup>Shuai Bai<sup>2</sup>, Junyang Lin<sup>2</sup>, Jianyu Chen<sup>2</sup>
+</sup>Jianke Zhang<sup>1</sup>, </sup>Xiaoyu Chen<sup>1</sup>, </sup>Qiuyue Wang<sup>2</sup>, </sup>Mingsheng Li<sup>2</sup>, </sup>Yanjiang Guo<sup>1</sup>, </sup>Yucheng Hu<sup>1</sup>, </sup>Jiajun Zhang<sup>2</sup>, </sup>Shuai Bai<sup>2</sup>, Junyang Lin<sup>2</sup>, Jianyu Chen<sup>1</sup>
 </p>
 <p align="center">
 <sup>1</sup> THU &nbsp;&nbsp;
