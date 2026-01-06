@@ -8,9 +8,9 @@
 <sup>1</sup> THU &nbsp;&nbsp;
 <sup>2</sup> Qwen Team, Alibaba Inc. &nbsp;&nbsp;
 </p>
-
+<p align="center">
 <a href='https://arxiv.org/abs/'><img src='https://img.shields.io/badge/ArXiv-2510.10125-red'></a> <a href='https://cladernyjorn.github.io/VLM4VLA.github.io/'><img src='https://img.shields.io/badge/Project-Page-Blue'></a> 
-
+</p>
 **TL; DR:** We present a simple and effective framework to fairly benchmark different Vision-Language Models (VLMs) as backbones for robotic policies, revealing a notable performance gap that highlights a disconnect between the VLM and VLA domains.
 
 <p>
@@ -22,7 +22,7 @@
 We find that the performance of VLMs on general benchmarks does not reliably predict their effectiveness in VLA tasks. Specifically, among the three environments we evaluated, only CALVIN shows a positive correlation between VLM general capabilities and VLA performance, while in the other environments the two exhibit little to no clear correlation.
 
 <p>
-  <img src="doc/3.png" alt="wild-data" width="40%" /><img src="doc/vlm_vla_model_colors.png" alt="wild-data" width="55%" />
+  <img src="doc/vlm_vla_model_colors.png" alt="wild-data" width="40%" /><img src="doc/2.png" alt="wild-data" width="55%" />
 </p>
 
 In our experiments, we found that the visual module within the VLM is a major bottleneck when transferring VLMs to VLA tasks. By applying Fast-Token fine-tuning on the Bridge dataset, we suspect that the representations learned by current VLMs differ significantly from the representations required for action control.
