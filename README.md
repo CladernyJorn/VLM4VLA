@@ -195,7 +195,7 @@ The test scripts above will create a results folder for each training-step check
 
 #### **Checkpoints**
 
-To facilitate reproducibility, we will release all checkpoints for each version of VLM4VLA. Since the paper evaluates multiple VLMs as backbones, we are still organizing and uploading the corresponding resources.
+To facilitate reproducibility, we plan to release all checkpoints for each version of VLM4VLA. Since the paper evaluates multiple VLMs as backbones, we are still working on organizing the corresponding resources.
 
 
 
