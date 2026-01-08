@@ -9,7 +9,7 @@
 <sup>2</sup> Qwen Team, Alibaba Inc. &nbsp;&nbsp;
 </p>
 <p align="center">
-<a href='https://arxiv.org/abs/'><img src='https://img.shields.io/badge/ArXiv-2510.10125-red'></a> <a href='https://cladernyjorn.github.io/VLM4VLA.github.io/'><img src='https://img.shields.io/badge/Project-Page-Blue'></a> 
+<a href='https://arxiv.org/abs/'><img src='https://img.shields.io/badge/ArXiv-2601.03309-red'></a> <a href='https://cladernyjorn.github.io/VLM4VLA.github.io/'><img src='https://img.shields.io/badge/Project-Page-Blue'></a> 
 </p>
 **TL; DR:** We present a simple and effective framework to fairly benchmark different Vision-Language Models (VLMs) as backbones for robotic policies, revealing a notable performance gap that highlights a disconnect between the VLM and VLA domains.
 
