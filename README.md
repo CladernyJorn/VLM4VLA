@@ -207,5 +207,10 @@ VLM4VLA is conducted based on [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs)
 ## Bibtex 
 If you find our work helpful, please leave us a star and cite our paper. Thank you!
 ```
-
+@article{zhang2026vlm4vla,
+  title={VLM4VLA: Revisiting Vision-Language-Models in Vision-Language-Action Models},
+  author={Zhang, Jianke and Chen, Xiaoyu and Wang, Qiuyue and Li, Mingsheng and Guo, Yanjiang and Hu, Yucheng and Zhang, Jiajun and Bai, Shuai and Lin, Junyang and Chen, Jianyu},
+  journal={arXiv preprint arXiv:2601.03309},
+  year={2026}
+}
 ```
