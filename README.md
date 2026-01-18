@@ -112,7 +112,7 @@ python eval/libero/env_test.py
 
 ```
 
-To ensure compatibility between the libraries required for inference and those needed for testing, we recommend first installing the libraries required for the inference VLM as described in Step 1, and then installing the libraries needed for each test environment separately. To maintain compatibility, we suggest using Python 3.8–3.10 in the CALVIN and LIBERO environment (versions higher than 3.8 on CALVIN may require minor modifications to certain libraries), and Python 3.10 for the Simpler. Overall, we suggest using python3.10 for both training and evaluation.
+To ensure compatibility between the libraries required for inference and those needed for testing, we recommend first installing the libraries required for the inference VLM as described in Step 1, and then installing the libraries needed for each test environment separately. To maintain compatibility, we suggest using Python 3.8–3.10 in the CALVIN and LIBERO environment (versions higher than 3.8 on CALVIN may require minor modifications to certain libraries), and Python 3.10 for the Simpler. Overall, we suggest using Python 3.10 for both training and evaluation.
 
 
 
@@ -120,18 +120,18 @@ To ensure compatibility between the libraries required for inference and those n
 
 ## Adding VLM Baselines
 
-VLM4VLA is built on top of the [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs) framework. We modified the originally supported VLMs and updated several model configurations as well as the action chunk trick. Instructions for adding or modifying model parameters can be found in the tutorials provided in the [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs) repository. As a reference, our core model configurations and codes are located in the `configs` and `vlm4vla/model/backbone`, respectively. 
+VLM4VLA is built on top of the [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs) framework. We modified the originally supported VLMs and updated several model configurations as well as the action chunk trick. Instructions for adding or modifying model parameters can be found in the tutorials provided in the [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs) repository. As a erence, our core model configurations and codes are located in the `configs` and `vlm4vla/model/backbone`, respectively. 
 
 Below, using Qwen2.5-VL as an example, we describe in detail how to integrate a new model and apply the architectural modifications.
 
 In `vlm4vla/model/backbone/roboqwen25vl.py`, we implement the core function of integrating Qwen2.5-VL into VLM4VLA.
 
-- `def image_processor(self)`: we modify this function to resize all images into 224x224, this will be used in dataloader part to prerocess images. By adding this, we can avoid the influence of different input image size and simplify the dynamic image resolution used in Qwen2.5-VL.
-- `def forward_continuous()`: we rewrite this function in `base_backbone` to support more recent VLM architectures. We take use of image sequences, text processed in dataloader using `qwen_vl_utils` and rearrange their embeddings in this function, as shown in Appendix 2.3. We then feed the concatted sequences into VLM backbone via `Qwen2_5_VLForConditionalGeneration.forward()`. (For Qwen3VL, besides imput embeddings, you should also take care of deep stack features.)
+- `def image_processor(self)`: we modify this function to resize all images into 224x224, which will be used in the dataloader part to preprocess images. By adding this, we can avoid the influence of different input image sizes and simplify the dynamic image resolution used in Qwen2.5-VL.
+- `def forward_continuous()`: we rewrite this function in `base_backbone` to support more recent VLM architectures. We take use of image sequences, text processed in dataloader using `qwen_vl_utils` and rearrange their embeddings in this function, as shown in Appendix 2.3. We then feed the concatenated sequences into VLM backbone via `Qwen2_5_VLForConditionalGeneration.forward()`. (For Qwen3VL, besides input embeddings, you should also take care of deep stack features.)
 
-In `vlm4vla/model/policy_head` provides the FCDecoder head we used for all models by defualt, we also implement a pi0-style (layer-wised attention) flow-matching head in `vlm4vla/model/policy_head/fm_decoder.py` as a reference.
+In `vlm4vla/model/policy_head` provides the FCDecoder head we used for all models by default. Besides, as a reference, we also implement a pi0-style (layer-wise attention) flow-matching head for Qwen3VL, referring [StarVLA](https://github.com/starVLA/starVLA) in `vlm4vla/model/policy_head/fm_decoder.py`. (Since our experiments did not cover the flow-matching head, the performance on FMDecoder is not carefully checked.)
 
-In `configs/calvin_finetune/finetune_qwen25vl-3b_calvin.json`, we define all configurations of the model on CALVIN benchmark, we keep the below core settings shared across all VLM4VLA baselines for fair comparison:
+In `configs/calvin_finetune/finetune_qwen25vl-3b_calvin.json`, we define all configurations of the model on CALVIN benchmark. We keep the below core settings shared across all VLM4VLA baselines for fair comparison:
 
 ```
 "image_size": 224, # Input image size
