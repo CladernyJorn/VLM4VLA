@@ -120,7 +120,7 @@ To ensure compatibility between the libraries required for inference and those n
 
 ## Adding VLM Baselines
 
-VLM4VLA is built on top of the [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs) framework. We modified the originally supported VLMs and updated several model configurations as well as the action chunk trick. Instructions for adding or modifying model parameters can be found in the tutorials provided in the [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs) repository. As a erence, our core model configurations and codes are located in the `configs` and `vlm4vla/model/backbone`, respectively. 
+VLM4VLA is built on top of the [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs) framework. We modified the originally supported VLMs and updated several model configurations as well as the action chunk trick. Instructions for adding or modifying model parameters can be found in the tutorials provided in the [RoboVLMs](https://github.com/Robot-VLAs/RoboVLMs) repository. As a reference, our core model configurations and codes are located in the `configs` and `vlm4vla/model/backbone`, respectively. 
 
 Below, using Qwen2.5-VL as an example, we describe in detail how to integrate a new model and apply the architectural modifications.
 
