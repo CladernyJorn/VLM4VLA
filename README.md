@@ -193,10 +193,6 @@ python eval/libero/eval_ckpts_libero.py
 
 The test scripts above will create a results folder for each training-step checkpoint under the `base_path`, containing the task success rates for different action‑chunk lengths. For CALVIN, multi‑GPU testing is supported (by adjusting the number of GPUs). For Simpler and LIBERO, only single‑GPU testing is supported.
 
-#### **Checkpoints**
-
-To facilitate reproducibility, we plan to release all checkpoints for each version of VLM4VLA. Since the paper evaluates multiple VLMs as backbones, we are still working on organizing the corresponding resources.
-
 
 
 ## Acknowledgement
